@@ -29,14 +29,21 @@ function createStatus(status, repo, url, sha) {
     });
 }
 
+function extractStatus(qualityGate) {
+    var status = 'failure';
+    if (qualityGate.status === 'OK') {
+        status = 'success';
+    }
+    return status;
+}
+
 // noinspection JSUnresolvedFunction
 router.post('/sonar/status', function(req, res) {
     var sonar = req.body;
     var status = '';
     if (sonar.status === 'SUCCESS') {
-        status = 'success';
-    } else if (sonar.status !== undefined) {
-        status = 'failure';
+        // noinspection JSUnresolvedVariable
+        status = extractStatus(sonar.qualityGate);
     } else {
         status = 'error';
     }
