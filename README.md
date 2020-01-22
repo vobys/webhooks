@@ -14,7 +14,10 @@ deste arquivo:
 ```json
 {
   "github": {
-    "owner": "vobys",
+    "owner": "github",
+    "token": "XYZ"
+  },
+  "gitlab": {
     "token": "XYZ"
   }
 }
@@ -22,7 +25,9 @@ deste arquivo:
 
     github         :: Informações sobre o repositório do GitHub
         owner      :: Organização do GitHub para os repositórios
-        token      :: O token de autenticação do GutHub
+        token      :: O token de autenticação do GitHub
+    gitlab         :: Informações sobre o repositório do GitLab
+        token      :: O token de autenticação do GitLab
 
 ### Executando o Servidor
 

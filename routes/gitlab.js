@@ -4,21 +4,21 @@ var router = express.Router();
 
 var config = require("../config.json");
 
-function createStatus(status, repo, url, sha) {
+function createStatus(status, project, url, sha, ref, coverage) {
     var options = {
         method: 'POST',
-        url: 'https://api.github.com/repos/' + config.github.owner + '/' + repo + '/statuses/' + sha,
+        url: 'https://gitlab.com/api/v4/projects/' + project + '/statuses/' + sha + '?'
+                + '?state=' + status
+                + '&ref=' + ref
+                + '&name=SonarQube'
+                + '&description=Continuous Code Quality'
+                + '&coverage=' + coverage
+                + '&target_url=' + url,
         headers: {
             'User-Agent': 'WebHooks-App',
             'cache-control': 'no-cache',
-            Authorization: 'token ' + config.github.token,
+            'PRIVATE-TOKEN': config.gitlab.token,
             'Content-Type': 'application/json'
-        },
-        body: {
-            state: status,
-            target_url: url,
-            description: 'Continuous Code Quality',
-            context: 'SonarQube'
         },
         json: true
     };
@@ -30,7 +30,7 @@ function createStatus(status, repo, url, sha) {
 }
 
 function extractStatus(qualityGate) {
-    var status = 'failed';
+    var status = 'failure';
     if (qualityGate.status === 'OK') {
         status = 'success';
     }
@@ -45,7 +45,7 @@ router.post('/sonar/status', function(req, res) {
         // noinspection JSUnresolvedVariable
         status = extractStatus(sonar.qualityGate);
     } else {
-        status = 'canceled';
+        status = 'error';
     }
     // noinspection JSUnresolvedVariable
     createStatus(status,
