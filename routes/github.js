@@ -49,7 +49,7 @@ router.post('/sonar/status', function(req, res) {
     }
     // noinspection JSUnresolvedVariable
     createStatus(status,
-            sonar.project.key.split(':')[0],
+            sonar.project.key,
             sonar.project.url,
             sonar.revision);
     res.send({"status": status});

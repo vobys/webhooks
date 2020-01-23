@@ -39,11 +39,20 @@ function extractStatus(qualityGate) {
 
 function extractCoverage(qualityGate) {
     var value = null;
+    // noinspection JSUnresolvedVariable
     var coverage = qualityGate.conditions.find(condition => condition.metric === 'coverage');
     if (coverage) {
         value = coverage.value;
     }
     return value;
+}
+
+function extractBranch(sonar) {
+    if (sonar.properties['sonar.analysis.branch']) {
+        return sonar.properties['sonar.analysis.branch'];
+    }
+    // noinspection JSUnresolvedVariable
+    return sonar.branch.name;
 }
 
 // noinspection JSUnresolvedFunction
@@ -61,7 +70,7 @@ router.post('/sonar/status', function(req, res) {
             config.gitlab.namespace + '%2F' + sonar.project.key,
             sonar.project.url,
             sonar.revision,
-            sonar.branch.name,
+            extractBranch(sonar),
             extractCoverage(sonar.qualityGate));
     res.send({"status": status});
 });
