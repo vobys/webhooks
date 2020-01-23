@@ -7,7 +7,7 @@ var config = require("../config.json");
 function createStatus(status, project, url, sha, ref, coverage) {
     var options = {
         method: 'POST',
-        url: 'https://gitlab.com/api/v4/projects/' + project + '/statuses/' + sha + '?'
+        url: 'https://gitlab.com/api/v4/projects/' + project + '/statuses/' + sha
                 + '?state=' + status
                 + '&ref=' + ref
                 + '&name=SonarQube'
