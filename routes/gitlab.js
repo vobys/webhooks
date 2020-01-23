@@ -30,7 +30,7 @@ function createStatus(status, project, url, sha, ref, coverage) {
 }
 
 function extractStatus(qualityGate) {
-    var status = 'failure';
+    var status = 'failed';
     if (qualityGate.status === 'OK') {
         status = 'success';
     }
@@ -54,7 +54,7 @@ router.post('/sonar/status', function(req, res) {
         // noinspection JSUnresolvedVariable
         status = extractStatus(sonar.qualityGate);
     } else {
-        status = 'error';
+        status = 'canceled';
     }
     // noinspection JSUnresolvedVariable
     createStatus(status,
