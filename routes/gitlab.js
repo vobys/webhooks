@@ -58,9 +58,9 @@ router.post('/sonar/status', function(req, res) {
     }
     // noinspection JSUnresolvedVariable
     createStatus(status,
-            sonar.properties['sonar.analysis.projectId'],
+            config.gitlab.namespace + '%2F' + sonar.project.key,
             sonar.project.url,
-            sonar.properties['sonar.analysis.scmRevision'],
+            sonar.revision,
             sonar.branch.name,
             extractCoverage(sonar.qualityGate));
     res.send({"status": status});

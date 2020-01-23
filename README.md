@@ -19,6 +19,7 @@ deste arquivo:
     "token": "XYZ"
   },
   "gitlab": {
+    "namespace": "gitlab",
     "token": "XYZ"
   }
 }
@@ -28,6 +29,7 @@ deste arquivo:
         owner      :: Organização do GitHub para os repositórios
         token      :: O token de autenticação do GitHub
     gitlab         :: Informações sobre o repositório do GitLab
+        namespace  :: Grupo do GitLab para os repositórios
         token      :: O token de autenticação do GitLab
 
 ### Executando o Servidor

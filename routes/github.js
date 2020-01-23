@@ -51,7 +51,7 @@ router.post('/sonar/status', function(req, res) {
     createStatus(status,
             sonar.project.key.split(':')[0],
             sonar.project.url,
-            sonar.properties['sonar.analysis.scmRevision']);
+            sonar.revision);
     res.send({"status": status});
 });
 
