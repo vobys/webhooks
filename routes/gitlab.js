@@ -44,6 +44,16 @@ const measures = {
     value: num => num + "%"
   }
 };
+const statuses = {
+  success: {
+    label: "Ok",
+    color: "blue"
+  },
+  failed: {
+    label: "Failed",
+    color: "red"
+  }
+};
 
 // eslint-disable-next-line max-params
 function createStatus(status, project, url, sha, ref, coverage) {
@@ -80,7 +90,7 @@ function createStatus(status, project, url, sha, ref, coverage) {
 }
 
 // eslint-disable-next-line max-params
-function createMergeNote(project, ref, qualityGate, projectKey, serverUrl) {
+function createMergeNote(project, ref, qualityGate, projectKey, status) {
   const options = {
     method: "GET",
     url:
@@ -101,7 +111,7 @@ function createMergeNote(project, ref, qualityGate, projectKey, serverUrl) {
     if (error) throw new Error(error);
     if (body.length > 0 && body[0].iid) {
       createNote(
-        extractNote(qualityGate, projectKey, serverUrl),
+        extractNote(qualityGate, projectKey, status),
         project,
         body[0].iid
       );
@@ -163,7 +173,7 @@ function extractBranch(sonar) {
   return sonar.branch.name;
 }
 
-function extractNote(qualityGate, project, serverUrl) {
+function extractNote(qualityGate, project, status) {
   let note =
     "### SonarQube\n" +
     ":construction_worker: Continuous Code Quality (" +
@@ -178,11 +188,11 @@ function extractNote(qualityGate, project, serverUrl) {
         measures[condition.metric].icon
       }: \`${measures[condition.metric].value(condition.value)}\`\n`;
     });
-  note += `\n[![Quality Gate Status](${serverUrl}/api/project_badges/measure?project=${project.key}&metric=alert_status)](${project.url})`;
+  note += `\n[![Quality Gate Status](https://img.shields.io/badge/SonarQube-${statuses[status].label}-${statuses[status].color})](${project.url})`;
   return note;
 }
 
-router.post("/sonar/status", function(req, res) {
+router.post("/sonar/status/:namespace", function(req, res) {
   const sonar = req.body;
   let status;
   if (sonar.status === "SUCCESS") {
@@ -193,18 +203,18 @@ router.post("/sonar/status", function(req, res) {
 
   createStatus(
     status,
-    config.gitlab.namespace + "%2F" + sonar.project.key,
+    req.params.namespace + "%2F" + sonar.project.key,
     sonar.project.url,
     sonar.revision,
     extractBranch(sonar),
     extractCoverage(sonar.qualityGate)
   );
   createMergeNote(
-    config.gitlab.namespace + "%2F" + sonar.project.key,
+    req.params.namespace + "%2F" + sonar.project.key,
     extractBranch(sonar),
     sonar.qualityGate,
     sonar.project,
-    sonar.serverUrl
+    status
   );
   res.send({ status: status });
 });
