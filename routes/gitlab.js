@@ -154,7 +154,7 @@ function extractStatus(qualityGate) {
 }
 
 function extractCoverage(qualityGate) {
-  let value = null;
+  let value = 0;
   const coverage = qualityGate.conditions.find(
     condition => condition.metric === "coverage"
   );
