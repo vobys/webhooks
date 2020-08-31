@@ -175,14 +175,14 @@ function extractBranch(sonar) {
 
 function extractNote(qualityGate, project, status) {
   let note =
-    "### SonarQube\n" +
+    "__**SonarQube**__\n" +
     ":construction_worker: Continuous Code Quality (" +
     qualityGate.name +
     ")\n";
   qualityGate.conditions
     .filter(condition => measures[condition.metric])
     .forEach(condition => {
-      note += `>\n> ${
+      note += `> \n> ${
         condition.status === "OK" ? ":green_heart:" : ":heart:"
       } ${measures[condition.metric].label} :${
         measures[condition.metric].icon
