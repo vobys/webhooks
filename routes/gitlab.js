@@ -188,7 +188,11 @@ function extractNote(qualityGate, project, status) {
         measures[condition.metric].icon
       }: \`${measures[condition.metric].value(condition.value)}\`\n`;
     });
-  note += `\n[![Quality Gate Status](https://img.shields.io/badge/SonarQube-${statuses[status].label}-${statuses[status].color})](${project.url})`;
+  note += `\n[![SonarQube ${statuses[status].label} ${
+    status === "success" ? ":green_heart:" : ":heart:"
+  }](https://img.shields.io/badge/SonarQube-${statuses[status].label}-${
+    statuses[status].color
+  })](${project.url})`;
   return note;
 }
 
