@@ -1,20 +1,24 @@
-## Vobys WebHook Server
+## WebHooks Server
 
-Este é a **API** para integrações via **WebHooks** do **Vobys** no **Discord** utilizada para automatizar algumas tarefas de infraestrutura.
+Este é um servidor de integrações via **WebHooks** utilizado para automatizar algumas tarefas de infraestrutura.
 
-Até o momento temos os seguintes integrações implementadas:
+Até o momento temos as seguintes integrações implementadas:
 
 * SonarQube Analysis to GitHub Statuses
+* SonarQube Analysis to GitLab Statuses
 
 ### Configurações
 
-Algumas configurações podem ser realizadas através de um arquivo externo nomeado `config.json`. A seguir, um exemplo
+As configurações são realizadas através de um arquivo externo nomeado `config.json`. A seguir, um exemplo
 deste arquivo:
 
 ```json
 {
   "github": {
-    "owner": "vobys",
+    "owner": "github",
+    "token": "XYZ"
+  },
+  "gitlab": {
     "token": "XYZ"
   }
 }
@@ -22,7 +26,9 @@ deste arquivo:
 
     github         :: Informações sobre o repositório do GitHub
         owner      :: Organização do GitHub para os repositórios
-        token      :: O token de autenticação do GutHub
+        token      :: O token de autenticação do GitHub
+    gitlab         :: Informações sobre o repositório do GitLab
+        token      :: O token de autenticação do GitLab
 
 ### Executando o Servidor
 
