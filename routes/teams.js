@@ -68,7 +68,7 @@ function sendMessage(
 }
 
 router.post("/github/deployments/:team/:channel/:hook", function(req, res) {
-  const deploymentStatus = req.body;
+  const deploymentStatus = req.body.payload ? JSON.parse(req.body.payload) : {};
   if (
     deploymentStatus.deployment_status &&
     deploymentStatus.deployment_status.state === "success"
