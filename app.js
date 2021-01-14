@@ -8,6 +8,7 @@ const indexRouter = require("./routes/index");
 const usersRouter = require("./routes/users");
 const githubRouter = require("./routes/github");
 const gitlabRouter = require("./routes/gitlab");
+const teamsRouter = require("./routes/teams");
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use("/", indexRouter);
 app.use("/users", usersRouter);
 app.use("/github", githubRouter);
 app.use("/gitlab", gitlabRouter);
+app.use("/teams", teamsRouter);
 
 // Catch 404 and forward to error handler
 app.use(function(req, res, next) {
