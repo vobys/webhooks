@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 const express = require("express");
 const request = require("request");
 // eslint-disable-next-line new-cap
@@ -15,6 +16,37 @@ function checkStatus(repo, callback) {
       Authorization: `token ${config.github.token}`,
       Accept: "application/vnd.github.antiope-preview+json"
     }
+  };
+
+  return request(options, callback);
+}
+
+// eslint-disable-next-line max-params
+function createDeployment(repo, sha, build, env, callback) {
+  const environment = config.github.environments.find(e => e.name === env);
+  const options = {
+    method: "POST",
+    url: `https://api.github.com/repos/${config.github.owner}/${repo}/deployments`,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `token ${config.github.token}`,
+      Accept: "application/vnd.github.ant-man-preview+json"
+    },
+    body: JSON.stringify({
+      ref: sha,
+      task: environment.task,
+      auto_merge: false,
+      payload: {
+        server: environment.server,
+        location: environment.location,
+        tag: build
+      },
+      environment: env,
+      description: environment.desc,
+      required_contexts: [],
+      transient_environment: false,
+      production_environment: false
+    })
   };
 
   return request(options, callback);
@@ -60,6 +92,36 @@ router.get("/github/:repo/:environment", function(req, res) {
       envs: []
     });
   });
+});
+
+router.get("/github/:repo/:environment/:sha/:build", function(req, res) {
+  let error = "";
+  let server = "";
+  let url = "";
+
+  createDeployment(
+    req.params.repo,
+    req.params.sha,
+    req.params.build,
+    req.params.environment,
+    function(err, response) {
+      if (err) error = err;
+      // eslint-disable-next-line no-negated-condition
+      else if (response.statusCode !== 200) error = response.statusMessage;
+      else {
+        server = `Deploy to ${req.params.environment} requested!`;
+        url = `https://github.com/${config.github.owner}/${req.params.repo}/deployments`;
+      }
+
+      res.render("deploy", {
+        title: "Deploy to Server",
+        error: error,
+        server: server,
+        url: url,
+        envs: []
+      });
+    }
+  );
 });
 
 module.exports = router;
