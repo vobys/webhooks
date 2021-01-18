@@ -20,6 +20,14 @@ function checkStatus(repo, callback) {
   return request(options, callback);
 }
 
+router.get("/github/:repo", function(req, res) {
+  res.render("deploy", {
+    title: "Choose the environment:",
+    url: `/deploy/github/${req.params.repo}`,
+    envs: config.github.environments
+  });
+});
+
 router.get("/github/:repo/:environment", function(req, res) {
   let error = "";
   let server = "";
@@ -36,8 +44,9 @@ router.get("/github/:repo/:environment", function(req, res) {
         check[0].status === "completed" &&
         check[0].conclusion === "success"
       ) {
+        const buildNumber = check[0].output.summary.replace(/\D/g, "");
         server = `Start deploy to ${req.params.environment} now!`;
-        url = `/deploy/github/${req.params.repo}/${req.params.environment}/${check[0].head_sha}`;
+        url = `/deploy/github/${req.params.repo}/${req.params.environment}/${check[0].head_sha}/${buildNumber}`;
       } else {
         error = "master is not ready";
       }
@@ -47,7 +56,8 @@ router.get("/github/:repo/:environment", function(req, res) {
       title: "Deploy to Server",
       error: error,
       server: server,
-      url: url
+      url: url,
+      envs: []
     });
   });
 });
