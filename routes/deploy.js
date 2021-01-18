@@ -28,6 +28,7 @@ function createDeployment(repo, sha, build, env, callback) {
     method: "POST",
     url: `https://api.github.com/repos/${config.github.owner}/${repo}/deployments`,
     headers: {
+      "User-Agent": "Vobys WebHook Server",
       "Content-Type": "application/json",
       Authorization: `token ${config.github.token}`,
       Accept: "application/vnd.github.ant-man-preview+json"
@@ -107,7 +108,7 @@ router.get("/github/:repo/:environment/:sha/:build", function(req, res) {
     function(err, response) {
       if (err) error = err;
       // eslint-disable-next-line no-negated-condition
-      else if (response.statusCode !== 200) error = response.statusMessage;
+      else if (response.statusCode !== 201) error = response.statusMessage;
       else {
         server = `Deploy to ${req.params.environment} requested!`;
         url = `https://github.com/${config.github.owner}/${req.params.repo}/deployments`;
