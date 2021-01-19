@@ -24,7 +24,7 @@ function checkStatus(repo, callback) {
 // eslint-disable-next-line max-params
 function createDeployment(repo, sha, build, env, callback) {
   const repoInfos = config.github.repos.find(r => r.name === repo) || {
-    environments: {}
+    environments: []
   };
   const environment = repoInfos.environments.find(e => e.name === env);
   const options = {
@@ -58,7 +58,7 @@ function createDeployment(repo, sha, build, env, callback) {
 
 router.get("/github/:repo", function(req, res) {
   const repo = config.github.repos.find(r => r.name === req.params.repo) || {
-    environments: {}
+    environments: []
   };
   res.render("deploy", {
     title: "Choose the environment:",
