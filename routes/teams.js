@@ -31,7 +31,7 @@ function sendMessage(
           activitySubtitle: `Deployed to ${payload.location}`,
           activityImage:
             "https://github.githubassets.com/images/modules/logos_page/Octocat.png",
-          activityText: `${payload.tag} was deployed to ${environment}`
+          activityText: `Build ${payload.tag} was deployed to ${environment}`
         },
         {
           title: "Details",
