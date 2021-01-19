@@ -23,7 +23,10 @@ function checkStatus(repo, callback) {
 
 // eslint-disable-next-line max-params
 function createDeployment(repo, sha, build, env, callback) {
-  const environment = config.github.environments.find(e => e.name === env);
+  const repoInfos = config.github.repos.find(r => r.name === repo) || {
+    environments: {}
+  };
+  const environment = repoInfos.environments.find(e => e.name === env);
   const options = {
     method: "POST",
     url: `https://api.github.com/repos/${config.github.owner}/${repo}/deployments`,
