@@ -117,13 +117,17 @@ router.get("/github/:repo/:environment/:sha/:build", function(req, res) {
         url = `https://github.com/${config.github.owner}/${req.params.repo}/deployments`;
       }
 
-      res.render("deploy", {
-        title: "Deploy to Server",
-        error: error,
-        server: server,
-        url: url,
-        envs: []
-      });
+      if (url.startsWith("https")) {
+        res.redirect(url);
+      } else {
+        res.render("deploy", {
+          title: "Deploy to Server",
+          error: error,
+          server: server,
+          url: url,
+          envs: []
+        });
+      }
     }
   );
 });
