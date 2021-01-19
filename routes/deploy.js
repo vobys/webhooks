@@ -54,10 +54,13 @@ function createDeployment(repo, sha, build, env, callback) {
 }
 
 router.get("/github/:repo", function(req, res) {
+  const repo = config.github.repos.find(r => r.name === req.params.repo) || {
+    environments: {}
+  };
   res.render("deploy", {
     title: "Choose the environment:",
     url: `/deploy/github/${req.params.repo}`,
-    envs: config.github.environments
+    envs: repo.environments
   });
 });
 

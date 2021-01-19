@@ -16,7 +16,28 @@ deste arquivo:
 {
   "github": {
     "owner": "github",
-    "token": "XYZ"
+    "token": "XYZ",
+    "repos": [
+      {
+        "name": "repo-name",
+        "environments": [
+          {
+            "name": "Staging",
+            "desc": "Deploy from CD Job",
+            "location": "AWS Sample",
+            "server": "10.0.0.10",
+            "task": "deploy:webapp"
+          },
+          {
+            "name": "Production",
+            "desc": "Deploy from Approval Worflow",
+            "location": "AWS Sample",
+            "server": "10.0.0.11",
+            "task": "approval:webapp"
+          }
+        ]
+      }
+    ]
   },
   "gitlab": {
     "token": "XYZ"
@@ -27,6 +48,7 @@ deste arquivo:
     github         :: Informações sobre o repositório do GitHub
         owner      :: Organização do GitHub para os repositórios
         token      :: O token de autenticação do GitHub
+        repos      :: Informações extras por repositório do GitHub (vide exemplo acima)
     gitlab         :: Informações sobre o repositório do GitLab
         token      :: O token de autenticação do GitLab
 
