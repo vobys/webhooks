@@ -45,7 +45,7 @@ function createDeployment(repo, sha, build, env, callback) {
         location: environment.location,
         tag: build
       },
-      environment: env,
+      environment: environment.name,
       description: environment.desc,
       required_contexts: [],
       transient_environment: false,
@@ -53,7 +53,25 @@ function createDeployment(repo, sha, build, env, callback) {
     })
   };
 
-  return request(options, callback);
+  if (environment.script) {
+    const { spawn } = require("child_process");
+    const cmd = spawn("scripts/" + environment.script);
+
+    let scriptLog = "";
+    cmd.stdout.on("data", data => {
+      scriptLog = scriptLog.concat(`\nOUT => ${data}`);
+    });
+
+    cmd.stderr.on("data", data => {
+      scriptLog = scriptLog.concat(`\nERR => ${data}`);
+    });
+
+    cmd.on("close", code => {
+      callback(`${scriptLog}\nCODE => ${code}`, {});
+    });
+  } else {
+    return request(options, callback);
+  }
 }
 
 router.get("/github/:repo", function(req, res) {
