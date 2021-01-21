@@ -55,22 +55,35 @@ function createDeployment(repo, sha, build, env, callback) {
 
   if (environment.script) {
     const { spawn } = require("child_process");
-    const cmd = spawn("scripts/" + environment.script);
+    const cmd = spawn("scripts/" + environment.script.command);
+    let success = false;
 
-    let scriptLog = "";
     cmd.stdout.on("data", data => {
-      scriptLog = scriptLog.concat(`\nOUT => ${data}`);
+      console.info(data.toString());
+      const failOutput =
+        environment.script.output.fail.find(t => data.includes(t)) !==
+        undefined;
+      const successOutput =
+        environment.script.output.success.find(t => data.includes(t)) !==
+        undefined;
+      if (failOutput) {
+        callback(data, {});
+      } else if (successOutput) {
+        success = true;
+        callback("Waiting script execution...", {});
+      }
     });
 
     cmd.stderr.on("data", data => {
-      scriptLog = scriptLog.concat(`\nERR => ${data}`);
+      console.error(data.toString());
     });
 
     cmd.on("close", code => {
-      callback(`${scriptLog}\nCODE => ${code}`, {});
+      console.log(`Script end with code ${code}`);
+      if (success) request(options, callback);
     });
   } else {
-    return request(options, callback);
+    request(options, callback);
   }
 }
 
