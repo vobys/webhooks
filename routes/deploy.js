@@ -80,7 +80,7 @@ function createDeployment(repo, sha, build, env, callback) {
 
     cmd.on("close", code => {
       console.log(`Script end with code ${code}`);
-      if (success) request(options, callback);
+      if (success) request(options);
     });
   } else {
     request(options, callback);
