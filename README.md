@@ -34,6 +34,25 @@ deste arquivo:
             "location": "AWS Sample",
             "server": "10.0.0.11",
             "task": "approval:webapp"
+          },
+          {
+            "name": "Database",
+            "desc": "Update Database from Manual Job",
+            "location": "Oracle RDS",
+            "server": "10.0.0.20",
+            "task": "database:migration",
+            "script": {
+              "command": "migration.sh",
+              "output": {
+                "fail": [
+                  "No differences",
+                  "No changes"
+                ],
+                "success": [
+                  "Executing migrations"
+                ]
+              }
+            }
           }
         ]
       }
