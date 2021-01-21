@@ -55,7 +55,9 @@ function createDeployment(repo, sha, build, env, callback) {
 
   if (environment.script) {
     const { spawn } = require("child_process");
-    const cmd = spawn("scripts/" + environment.script.command);
+    const cmd = spawn("scripts/" + environment.script.command, [
+      environment.name
+    ]);
     let success = false;
 
     cmd.stdout.on("data", data => {
