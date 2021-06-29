@@ -60,6 +60,9 @@ deste arquivo:
   },
   "gitlab": {
     "token": "XYZ"
+  },
+  "teams": {
+    "owner": "microsoft"
   }
 }
 ```
@@ -70,6 +73,8 @@ deste arquivo:
         repos      :: Informações extras por repositório do GitHub (vide exemplo acima)
     gitlab         :: Informações sobre o repositório do GitLab
         token      :: O token de autenticação do GitLab
+    teams          :: Informações sobre o Teams
+        owner      :: Organização (parâmetro usado para a montagem da URL da organização)
 
 ### Executando o Servidor
 

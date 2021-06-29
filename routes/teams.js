@@ -3,19 +3,22 @@ const request = require("request");
 // eslint-disable-next-line new-cap
 const router = express.Router();
 
+const config = require("../config.json");
+
 // eslint-disable-next-line max-params
 function sendMessage(
   payload,
   environment,
   description,
   url,
+  server,
   team,
   channel,
   hook
 ) {
   const options = {
     method: "POST",
-    url: `https://outlook.office.com/webhook/${team}/IncomingWebhook/${channel}/${hook}`,
+    url: `https://${server}.webhook.office.com/webhookb2/${team}/IncomingWebhook/${channel}/${hook}`,
     headers: {
       "Content-Type": "application/json"
     },
@@ -81,6 +84,7 @@ router.post("/github/deployments/:team/:channel/:hook", function(req, res) {
         .replace(/api\./, "")
         .replace(/repos\//, "")
         .concat("/deployments"),
+      config.teams.owner,
       req.params.team,
       req.params.channel,
       req.params.hook
