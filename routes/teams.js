@@ -7,6 +7,8 @@ const config = require("../config.json");
 
 // eslint-disable-next-line max-params
 function sendMessage(
+  success,
+  repo,
   payload,
   environment,
   description,
@@ -25,16 +27,18 @@ function sendMessage(
     body: JSON.stringify({
       "@type": "MessageCard",
       "@context": "http://schema.org/extensions",
-      themeColor: "3CD357",
+      themeColor: success ? "56D364" : "F85149",
       summary: "notification",
-      title: "Deployments",
+      title: `Deployments · ${repo}`,
       sections: [
         {
-          activityTitle: "**New Deployment**",
-          activitySubtitle: `Deployed to ${payload.location}`,
+          activityTitle: success
+            ? "**Successful Deployment**"
+            : "**Deployment Failed**",
+          activitySubtitle: `Send to ${payload.location}`,
           activityImage:
             "https://github.githubassets.com/images/modules/logos_page/Octocat.png",
-          activityText: `Build ${payload.tag} was deployed to ${environment}`
+          activityText: `Build ${payload.tag} was deployed in ${environment}`
         },
         {
           title: "Details",
@@ -74,9 +78,12 @@ router.post("/github/deployments/:team/:channel/:hook", function(req, res) {
   const deploymentStatus = req.body.payload ? JSON.parse(req.body.payload) : {};
   if (
     deploymentStatus.deployment_status &&
-    deploymentStatus.deployment_status.state === "success"
+    (deploymentStatus.deployment_status.state === "success" ||
+      deploymentStatus.deployment_status.state === "error")
   ) {
     sendMessage(
+      deploymentStatus.deployment_status.state === "success",
+      deploymentStatus.repository.name,
       deploymentStatus.deployment.payload,
       deploymentStatus.deployment.environment,
       deploymentStatus.deployment.description,
