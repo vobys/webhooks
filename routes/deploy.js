@@ -6,10 +6,10 @@ const router = express.Router();
 
 const config = require("../config.json");
 
-function checkStatus(repo, callback) {
+function checkStatus(repo, ref, callback) {
   const options = {
     method: "GET",
-    url: `https://api.github.com/repos/${config.github.owner}/${repo}/commits/master/check-runs`,
+    url: `https://api.github.com/repos/${config.github.owner}/${repo}/commits/${ref}/check-runs`,
     headers: {
       "User-Agent": "Vobys WebHook Server",
       "Content-Type": "application/json",
@@ -105,7 +105,17 @@ router.get("/github/:repo/:environment", function(req, res) {
   let server = "";
   let url = "";
 
-  checkStatus(req.params.repo, function(err, response) {
+  const repo = config.github.repos.find(r => r.name === req.params.repo) || {
+    environments: []
+  };
+  const environment = repo.environments.find(
+    e => e.name === req.params.environment
+  ) || {
+    ref: "master"
+  };
+  const ref = environment.ref || "master";
+
+  checkStatus(req.params.repo, ref, function(err, response) {
     if (err) error = err;
     // eslint-disable-next-line no-negated-condition
     else if (response.statusCode !== 200) error = response.statusMessage;
@@ -120,7 +130,7 @@ router.get("/github/:repo/:environment", function(req, res) {
         server = `Start deploy to ${req.params.environment} now!`;
         url = `/deploy/github/${req.params.repo}/${req.params.environment}/${check[0].head_sha}/${buildNumber}`;
       } else {
-        error = "master is not ready";
+        error = `${ref} is not ready`;
       }
     }
 
