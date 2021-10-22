@@ -26,7 +26,8 @@ deste arquivo:
             "desc": "Deploy from CD Job",
             "location": "AWS Sample",
             "server": "10.0.0.10",
-            "task": "deploy:webapp"
+            "task": "deploy:webapp",
+            "ref": "develop"
           },
           {
             "name": "Production",
@@ -67,14 +68,16 @@ deste arquivo:
 }
 ```
 
-    github         :: Informações sobre o repositório do GitHub
-        owner      :: Organização do GitHub para os repositórios
-        token      :: O token de autenticação do GitHub
-        repos      :: Informações extras por repositório do GitHub (vide exemplo acima)
-    gitlab         :: Informações sobre o repositório do GitLab
-        token      :: O token de autenticação do GitLab
-    teams          :: Informações sobre o Teams
-        owner      :: Organização (parâmetro usado para a montagem da URL da organização)
+    github          :: Informações sobre o repositório do GitHub
+        owner       :: Organização do GitHub para os repositórios
+        token       :: O token de autenticação do GitHub
+        repos       :: Informações extras por repositório do GitHub (vide exemplo acima)
+            environments
+                ref :: [opcional] "branch" a ser implantada (valor padrão é "master")
+    gitlab          :: Informações sobre o repositório do GitLab
+        token       :: O token de autenticação do GitLab
+    teams           :: Informações sobre o Teams
+        owner       :: Organização (parâmetro usado para a montagem da URL da organização)
 
 ### Executando o Servidor
 
