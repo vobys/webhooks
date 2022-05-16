@@ -144,6 +144,49 @@ router.get("/github/:repo/:environment", function(req, res) {
   });
 });
 
+router.get("/github/:repo/:environment/json", function(req, res) {
+  let error = "";
+  let server = "";
+  let url = "";
+
+  const repo = config.github.repos.find(r => r.name === req.params.repo) || {
+    environments: []
+  };
+  const environment = repo.environments.find(
+    e => e.name === req.params.environment
+  ) || {
+    ref: "master"
+  };
+  const ref = environment.ref || "master";
+
+  checkStatus(req.params.repo, ref, function(err, response) {
+    if (err) error = err;
+    // eslint-disable-next-line no-negated-condition
+    else if (response.statusCode !== 200) error = response.statusMessage;
+    else {
+      const check = JSON.parse(response.body).check_runs;
+      if (
+        check.length > 0 &&
+        check[0].status === "completed" &&
+        check[0].conclusion === "success"
+      ) {
+        const buildNumber = check[0].output.summary.replace(/\D/g, "");
+        server = `Start deploy to ${req.params.environment} now!`;
+        url = `/deploy/github/${req.params.repo}/${req.params.environment}/${check[0].head_sha}/${buildNumber}`;
+      } else {
+        error = `${ref} is not ready`;
+      }
+    }
+
+    res.json({
+      title: "Deploy to Server",
+      error: error,
+      server: server,
+      url: url
+    });
+  });
+});
+
 router.get("/github/:repo/:environment/:sha/:build", function(req, res) {
   let error = "";
   let server = "";
@@ -174,6 +217,35 @@ router.get("/github/:repo/:environment/:sha/:build", function(req, res) {
           envs: []
         });
       }
+    }
+  );
+});
+
+router.get("/github/:repo/:environment/:sha/:build/json", function(req, res) {
+  let error = "";
+  let server = "";
+  let url = "";
+
+  createDeployment(
+    req.params.repo,
+    req.params.sha,
+    req.params.build,
+    req.params.environment,
+    function(err, response) {
+      if (err) error = err;
+      // eslint-disable-next-line no-negated-condition
+      else if (response.statusCode !== 201) error = response.statusMessage;
+      else {
+        server = `Deploy to ${req.params.environment} requested!`;
+        url = `https://github.com/${config.github.owner}/${req.params.repo}/deployments`;
+      }
+
+      res.json({
+        title: "Deploy to Server",
+        error: error,
+        server: server,
+        url: url
+      });
     }
   );
 });
