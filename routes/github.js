@@ -1,5 +1,5 @@
 const express = require("express");
-const request = require("request");
+const axios = require("axios");
 // eslint-disable-next-line new-cap
 const router = express.Router();
 
@@ -21,20 +21,22 @@ function createStatus(status, repo, url, sha) {
       Authorization: "token " + config.github.token,
       "Content-Type": "application/json"
     },
-    body: {
+    data: {
       state: status,
       // eslint-disable-next-line camelcase
       target_url: url,
       description: "Continuous Code Quality",
       context: "SonarQube"
-    },
-    json: true
+    }
   };
 
-  request(options, function(error, response, body) {
-    if (error) throw new Error(error);
-    console.log(body);
-  });
+  axios(options)
+    .then(function(response) {
+      console.log(response.data);
+    })
+    .catch(function(err) {
+      if (err && err.response) throw new Error(err.response.data);
+    });
 }
 
 function extractStatus(qualityGate) {

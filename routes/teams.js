@@ -1,5 +1,5 @@
 const express = require("express");
-const request = require("request");
+const axios = require("axios");
 // eslint-disable-next-line new-cap
 const router = express.Router();
 
@@ -24,7 +24,7 @@ function sendMessage(
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({
+    data: JSON.stringify({
       "@type": "MessageCard",
       "@context": "http://schema.org/extensions",
       themeColor: success ? "56D364" : "F85149",
@@ -68,10 +68,13 @@ function sendMessage(
     })
   };
 
-  request(options, function(error, response) {
-    if (error) throw new Error(error);
-    console.log(response.body);
-  });
+  axios(options)
+    .then(function(response) {
+      console.log(response.data);
+    })
+    .catch(function(err) {
+      if (err && err.response) throw new Error(err.response.data);
+    });
 }
 
 router.post("/github/deployments/:team/:channel/:hook", function(req, res) {
