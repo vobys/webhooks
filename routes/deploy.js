@@ -71,10 +71,19 @@ function createDeployment(repo, sha, build, env, callback, callbackErr) {
         environment.script.output.success.find(t => data.includes(t)) !==
         undefined;
       if (failOutput) {
-        callbackErr(data);
+        callbackErr({
+          response: {
+            data: data.toString()
+          }
+        });
       } else if (successOutput) {
         success = true;
-        callback("Waiting script execution...");
+        callback({
+          response: {
+            status: 200,
+            statusText: "Waiting script execution..."
+          }
+        });
       }
     });
 
@@ -247,6 +256,17 @@ router.get("/github/:repo/:environment/:sha/:build", function(req, res) {
           server: server,
           url: url,
           envs: []
+        });
+      }
+    },
+    function(err) {
+      if (err && err.response) {
+        error = err.response.data;
+        res.json({
+          title: "Deploy to Server",
+          error: error,
+          server: server,
+          url: url
         });
       }
     }
