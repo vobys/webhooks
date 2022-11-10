@@ -38,7 +38,7 @@ function createDeployment(repo, sha, build, env, callback, callbackErr) {
       Authorization: `token ${config.github.token}`,
       Accept: "application/vnd.github.ant-man-preview+json"
     },
-    data: JSON.stringify({
+    data: {
       ref: sha,
       task: environment.task,
       auto_merge: false,
@@ -52,7 +52,7 @@ function createDeployment(repo, sha, build, env, callback, callbackErr) {
       required_contexts: [],
       transient_environment: false,
       production_environment: false
-    })
+    }
   };
 
   if (environment.script) {
@@ -126,7 +126,7 @@ router.get("/github/:repo/:environment", function(req, res) {
       // eslint-disable-next-line no-negated-condition
       if (response.status !== 200) error = response.statusText;
       else {
-        const check = JSON.parse(response.data).check_runs;
+        const check = response.data.check_runs;
         if (
           check.length > 0 &&
           check[0].status === "completed" &&
@@ -185,7 +185,7 @@ router.get("/github/:repo/:environment/json", function(req, res) {
       // eslint-disable-next-line no-negated-condition
       if (response.status !== 200) error = response.statusText;
       else {
-        const check = JSON.parse(response.data).check_runs;
+        const check = response.data.check_runs;
         if (
           check.length > 0 &&
           check[0].status === "completed" &&
