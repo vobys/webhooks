@@ -24,7 +24,7 @@ function sendMessage(
     headers: {
       "Content-Type": "application/json"
     },
-    data: JSON.stringify({
+    data: {
       "@type": "MessageCard",
       "@context": "http://schema.org/extensions",
       themeColor: success ? "56D364" : "F85149",
@@ -65,7 +65,7 @@ function sendMessage(
           target: [`${url}`]
         }
       ]
-    })
+    }
   };
 
   axios(options)
