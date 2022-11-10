@@ -1,5 +1,5 @@
 const express = require("express");
-const request = require("request");
+const axios = require("axios");
 // eslint-disable-next-line new-cap
 const router = express.Router();
 
@@ -79,14 +79,16 @@ function createStatus(status, project, url, sha, ref, coverage) {
       "cache-control": "no-cache",
       "PRIVATE-TOKEN": config.gitlab.token,
       "Content-Type": "application/json"
-    },
-    json: true
+    }
   };
 
-  request(options, function(error, response, body) {
-    if (error) throw new Error(error);
-    console.log(body);
-  });
+  axios(options)
+    .then(function(response) {
+      console.log(response.data);
+    })
+    .catch(function(err) {
+      if (err && err.response) throw new Error(err.response.data);
+    });
 }
 
 // eslint-disable-next-line max-params
@@ -103,20 +105,22 @@ function createMergeNote(project, ref, qualityGate, projectKey, status) {
       "cache-control": "no-cache",
       "PRIVATE-TOKEN": config.gitlab.token,
       "Content-Type": "application/json"
-    },
-    json: true
+    }
   };
 
-  request(options, function(error, response, body) {
-    if (error) throw new Error(error);
-    if (body.length > 0 && body[0].iid) {
-      createNote(
-        extractNote(qualityGate, projectKey, status),
-        project,
-        body[0].iid
-      );
-    }
-  });
+  axios(options)
+    .then(function(response) {
+      if (response.data.length > 0 && response.data[0].iid) {
+        createNote(
+          extractNote(qualityGate, projectKey, status),
+          project,
+          response.data[0].iid
+        );
+      }
+    })
+    .catch(function(err) {
+      if (err && err.response) throw new Error(err.response.data);
+    });
 }
 
 function createNote(note, project, merge) {
@@ -134,14 +138,16 @@ function createNote(note, project, merge) {
       "PRIVATE-TOKEN": config.gitlab.token,
       "Content-Type": "application/json"
     },
-    body: { body: note },
-    json: true
+    data: { body: note }
   };
 
-  request(options, function(error, response, body) {
-    if (error) throw new Error(error);
-    console.log(body);
-  });
+  axios(options)
+    .then(function(response) {
+      console.log(response.data);
+    })
+    .catch(function(err) {
+      if (err && err.response) throw new Error(err.response.data);
+    });
 }
 
 function extractStatus(qualityGate) {

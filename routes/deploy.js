@@ -1,12 +1,12 @@
 /* eslint-disable camelcase */
 const express = require("express");
-const request = require("request");
+const axios = require("axios");
 // eslint-disable-next-line new-cap
 const router = express.Router();
 
 const config = require("../config.json");
 
-function checkStatus(repo, ref, callback) {
+function checkStatus(repo, ref, callback, callbackErr) {
   const options = {
     method: "GET",
     url: `https://api.github.com/repos/${config.github.owner}/${repo}/commits/${ref}/check-runs`,
@@ -18,11 +18,13 @@ function checkStatus(repo, ref, callback) {
     }
   };
 
-  return request(options, callback);
+  axios(options)
+    .then(callback)
+    .catch(callbackErr);
 }
 
 // eslint-disable-next-line max-params
-function createDeployment(repo, sha, build, env, callback) {
+function createDeployment(repo, sha, build, env, callback, callbackErr) {
   const repoInfos = config.github.repos.find(r => r.name === repo) || {
     environments: []
   };
@@ -36,7 +38,7 @@ function createDeployment(repo, sha, build, env, callback) {
       Authorization: `token ${config.github.token}`,
       Accept: "application/vnd.github.ant-man-preview+json"
     },
-    body: JSON.stringify({
+    data: JSON.stringify({
       ref: sha,
       task: environment.task,
       auto_merge: false,
@@ -69,10 +71,10 @@ function createDeployment(repo, sha, build, env, callback) {
         environment.script.output.success.find(t => data.includes(t)) !==
         undefined;
       if (failOutput) {
-        callback(data, {});
+        callbackErr(data);
       } else if (successOutput) {
         success = true;
-        callback("Waiting script execution...", {});
+        callback("Waiting script execution...");
       }
     });
 
@@ -82,10 +84,12 @@ function createDeployment(repo, sha, build, env, callback) {
 
     cmd.on("close", code => {
       console.log(`Script end with code ${code}`);
-      if (success) request(options);
+      if (success) axios(options);
     });
   } else {
-    request(options, callback);
+    axios(options)
+      .then(callback)
+      .catch(callbackErr);
   }
 }
 
@@ -115,33 +119,48 @@ router.get("/github/:repo/:environment", function(req, res) {
   };
   const ref = environment.ref || "master";
 
-  checkStatus(req.params.repo, ref, function(err, response) {
-    if (err) error = err;
-    // eslint-disable-next-line no-negated-condition
-    else if (response.statusCode !== 200) error = response.statusMessage;
-    else {
-      const check = JSON.parse(response.body).check_runs;
-      if (
-        check.length > 0 &&
-        check[0].status === "completed" &&
-        check[0].conclusion === "success"
-      ) {
-        const buildNumber = check[0].output.summary.replace(/\D/g, "");
-        server = `Start deploy to ${req.params.environment} now!`;
-        url = `/deploy/github/${req.params.repo}/${req.params.environment}/${check[0].head_sha}/${buildNumber}`;
-      } else {
-        error = `${ref} is not ready`;
+  checkStatus(
+    req.params.repo,
+    ref,
+    function(response) {
+      // eslint-disable-next-line no-negated-condition
+      if (response.status !== 200) error = response.statusText;
+      else {
+        const check = JSON.parse(response.data).check_runs;
+        if (
+          check.length > 0 &&
+          check[0].status === "completed" &&
+          check[0].conclusion === "success"
+        ) {
+          const buildNumber = check[0].output.summary.replace(/\D/g, "");
+          server = `Start deploy to ${req.params.environment} now!`;
+          url = `/deploy/github/${req.params.repo}/${req.params.environment}/${check[0].head_sha}/${buildNumber}`;
+        } else {
+          error = `${ref} is not ready`;
+        }
+      }
+
+      res.render("deploy", {
+        title: "Deploy to Server",
+        error: error,
+        server: server,
+        url: url,
+        envs: []
+      });
+    },
+    function(err) {
+      if (err && err.response) {
+        error = err.response.data;
+        res.render("deploy", {
+          title: "Deploy to Server",
+          error: error,
+          server: server,
+          url: url,
+          envs: []
+        });
       }
     }
-
-    res.render("deploy", {
-      title: "Deploy to Server",
-      error: error,
-      server: server,
-      url: url,
-      envs: []
-    });
-  });
+  );
 });
 
 router.get("/github/:repo/:environment/json", function(req, res) {
@@ -159,32 +178,46 @@ router.get("/github/:repo/:environment/json", function(req, res) {
   };
   const ref = environment.ref || "master";
 
-  checkStatus(req.params.repo, ref, function(err, response) {
-    if (err) error = err;
-    // eslint-disable-next-line no-negated-condition
-    else if (response.statusCode !== 200) error = response.statusMessage;
-    else {
-      const check = JSON.parse(response.body).check_runs;
-      if (
-        check.length > 0 &&
-        check[0].status === "completed" &&
-        check[0].conclusion === "success"
-      ) {
-        const buildNumber = check[0].output.summary.replace(/\D/g, "");
-        server = `Start deploy to ${req.params.environment} now!`;
-        url = `/deploy/github/${req.params.repo}/${req.params.environment}/${check[0].head_sha}/${buildNumber}`;
-      } else {
-        error = `${ref} is not ready`;
+  checkStatus(
+    req.params.repo,
+    ref,
+    function(response) {
+      // eslint-disable-next-line no-negated-condition
+      if (response.status !== 200) error = response.statusText;
+      else {
+        const check = JSON.parse(response.data).check_runs;
+        if (
+          check.length > 0 &&
+          check[0].status === "completed" &&
+          check[0].conclusion === "success"
+        ) {
+          const buildNumber = check[0].output.summary.replace(/\D/g, "");
+          server = `Start deploy to ${req.params.environment} now!`;
+          url = `/deploy/github/${req.params.repo}/${req.params.environment}/${check[0].head_sha}/${buildNumber}`;
+        } else {
+          error = `${ref} is not ready`;
+        }
+      }
+
+      res.json({
+        title: "Deploy to Server",
+        error: error,
+        server: server,
+        url: url
+      });
+    },
+    function(err) {
+      if (err && err.response) {
+        error = err.response.data;
+        res.json({
+          title: "Deploy to Server",
+          error: error,
+          server: server,
+          url: url
+        });
       }
     }
-
-    res.json({
-      title: "Deploy to Server",
-      error: error,
-      server: server,
-      url: url
-    });
-  });
+  );
 });
 
 router.get("/github/:repo/:environment/:sha/:build", function(req, res) {
@@ -197,10 +230,9 @@ router.get("/github/:repo/:environment/:sha/:build", function(req, res) {
     req.params.sha,
     req.params.build,
     req.params.environment,
-    function(err, response) {
-      if (err) error = err;
+    function(response) {
       // eslint-disable-next-line no-negated-condition
-      else if (response.statusCode !== 201) error = response.statusMessage;
+      if (response.status !== 201) error = response.statusText;
       else {
         server = `Deploy to ${req.params.environment} requested!`;
         url = `https://github.com/${config.github.owner}/${req.params.repo}/deployments`;
@@ -231,10 +263,9 @@ router.get("/github/:repo/:environment/:sha/:build/json", function(req, res) {
     req.params.sha,
     req.params.build,
     req.params.environment,
-    function(err, response) {
-      if (err) error = err;
+    function(response) {
       // eslint-disable-next-line no-negated-condition
-      else if (response.statusCode !== 201) error = response.statusMessage;
+      if (response.status !== 201) error = response.statusText;
       else {
         server = `Deploy to ${req.params.environment} requested!`;
         url = `https://github.com/${config.github.owner}/${req.params.repo}/deployments`;
@@ -246,6 +277,17 @@ router.get("/github/:repo/:environment/:sha/:build/json", function(req, res) {
         server: server,
         url: url
       });
+    },
+    function(err) {
+      if (err && err.response) {
+        error = err.response.data;
+        res.json({
+          title: "Deploy to Server",
+          error: error,
+          server: server,
+          url: url
+        });
+      }
     }
   );
 });
