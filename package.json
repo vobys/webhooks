@@ -1,6 +1,6 @@
 {
   "name": "webhooks",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "WebHooks server of the Vobys",
   "private": true,
   "scripts": {
