@@ -79,10 +79,8 @@ function createDeployment(repo, sha, build, env, callback, callbackErr) {
       } else if (successOutput) {
         success = true;
         callback({
-          response: {
-            status: 200,
-            statusText: "Waiting script execution..."
-          }
+          status: 200,
+          statusText: "Waiting script execution..."
         });
       }
     });
