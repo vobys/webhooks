@@ -198,7 +198,10 @@ router.get("/github/:repo/:environment/json", function(req, res) {
           check[0].status === "completed" &&
           check[0].conclusion === "success"
         ) {
-          const buildNumber = check[0].output.summary.replace(/\D/g, "");
+          const output = check[0].output.summary;
+          const buildNumber = output
+            .substring(output.indexOf("[build]"))
+            .replace(/\D/g, "");
           server = `Start deploy to ${req.params.environment} now!`;
           url = `/deploy/github/${req.params.repo}/${req.params.environment}/${check[0].head_sha}/${buildNumber}`;
         } else {
