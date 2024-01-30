@@ -141,7 +141,10 @@ router.get("/github/:repo/:environment", function(req, res) {
         ) {
           const output = check[0].output.summary;
           const buildNumber = output
-            .substring(output.indexOf("[build]"), output.indexOf("workflows"))
+            .substring(
+              output.indexOf("[build]"),
+              output.indexOf("workflows", output.indexOf("[build]"))
+            )
             .replace(/\D/g, "");
           server = `Start deploy to ${req.params.environment} now!`;
           url = `/deploy/github/${req.params.repo}/${req.params.environment}/${check[0].head_sha}/${buildNumber}`;
@@ -203,7 +206,10 @@ router.get("/github/:repo/:environment/json", function(req, res) {
         ) {
           const output = check[0].output.summary;
           const buildNumber = output
-            .substring(output.indexOf("[build]"), output.indexOf("workflows"))
+            .substring(
+              output.indexOf("[build]"),
+              output.indexOf("workflows", output.indexOf("[build]"))
+            )
             .replace(/\D/g, "");
           server = `Start deploy to ${req.params.environment} now!`;
           url = `/deploy/github/${req.params.repo}/${req.params.environment}/${check[0].head_sha}/${buildNumber}`;
