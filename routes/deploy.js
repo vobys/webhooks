@@ -201,13 +201,16 @@ router.get("/github/:repo/:environment/json", function(req, res) {
       // eslint-disable-next-line no-negated-condition
       if (response.status !== 200) error = response.statusText;
       else {
-        const check = response.data.check_runs;
+        const checks = response.data.check_runs;
+        const ci_check = checks.filter(
+          check => check.name === config.github.check
+        );
         if (
-          check.length > 0 &&
-          check[0].status === "completed" &&
-          check[0].conclusion === "success"
+          ci_check.length > 0 &&
+          ci_check[0].status === "completed" &&
+          ci_check[0].conclusion === "success"
         ) {
-          const output = check[0].output.summary;
+          const output = ci_check[0].output.summary;
           const buildNumber = output
             .substring(
               output.indexOf("[build]"),
@@ -215,7 +218,7 @@ router.get("/github/:repo/:environment/json", function(req, res) {
             )
             .replace(/\D/g, "");
           server = `Start deploy to ${req.params.environment} now!`;
-          url = `/deploy/github/${req.params.repo}/${req.params.environment}/${check[0].head_sha}/${buildNumber}`;
+          url = `/deploy/github/${req.params.repo}/${req.params.environment}/${ci_check[0].head_sha}/${buildNumber}`;
         } else {
           error = `${ref} is not ready`;
         }
