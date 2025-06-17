@@ -143,11 +143,11 @@ router.get("/github/:repo/:environment", function(req, res) {
           (!config.github.check.required ||
             ci_check[0].conclusion === "success")
         ) {
-          const output = ci_check[0].output.summary;
+          const output = ci_check[0].html_url;
           const buildNumber = output
             .substring(
-              output.indexOf("[build]"),
-              output.indexOf("workflows", output.indexOf("[build]"))
+              output.indexOf("actions/runs/"),
+              output.indexOf("/job", output.indexOf("actions/runs/"))
             )
             .replace(/\D/g, "");
           server = `Start deploy to ${req.params.environment} now!`;
@@ -212,11 +212,11 @@ router.get("/github/:repo/:environment/json", function(req, res) {
           (!config.github.check.required ||
             ci_check[0].conclusion === "success")
         ) {
-          const output = ci_check[0].output.summary;
+          const output = ci_check[0].html_url;
           const buildNumber = output
             .substring(
-              output.indexOf("[build]"),
-              output.indexOf("workflows", output.indexOf("[build]"))
+              output.indexOf("actions/runs/"),
+              output.indexOf("/job", output.indexOf("actions/runs/"))
             )
             .replace(/\D/g, "");
           server = `Start deploy to ${req.params.environment} now!`;
