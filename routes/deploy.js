@@ -23,6 +23,23 @@ function checkStatus(repo, ref, callback, callbackErr) {
     .catch(callbackErr);
 }
 
+function workflowStatus(repo, ref, callback, callbackErr) {
+  const options = {
+    method: "GET",
+    url: `https://api.github.com/repos/${config.github.owner}/${repo}/actions/workflows/${config.github.check.name}/runs?branch=${ref}`,
+    headers: {
+      "User-Agent": "Vobys WebHook Server",
+      "Content-Type": "application/json",
+      Authorization: `token ${config.github.token}`,
+      Accept: "application/vnd.github.antiope-preview+json"
+    }
+  };
+
+  axios(options)
+    .then(callback)
+    .catch(callbackErr);
+}
+
 // eslint-disable-next-line max-params
 function createDeployment(repo, sha, build, env, callback, callbackErr) {
   const repoInfos = config.github.repos.find(r => r.name === repo) || {
@@ -126,48 +143,38 @@ router.get("/github/:repo/:environment", function(req, res) {
   };
   const ref = environment.ref || "master";
 
-  checkStatus(
-    req.params.repo,
-    ref,
-    function(response) {
-      // eslint-disable-next-line no-negated-condition
-      if (response.status !== 200) error = response.statusText;
-      else {
-        const checks = response.data.check_runs;
-        const ci_check = checks.filter(
-          check => check.name === config.github.check.name
-        );
-        if (
-          ci_check.length > 0 &&
-          ci_check[0].status === "completed" &&
-          (!config.github.check.required ||
-            ci_check[0].conclusion === "success")
-        ) {
-          const output = ci_check[0].html_url;
-          const buildNumber = output
-            .substring(
-              output.indexOf("actions/runs/"),
-              output.indexOf("/job", output.indexOf("actions/runs/"))
-            )
-            .replace(/\D/g, "");
-          server = `Start deploy to ${req.params.environment} now!`;
-          url = `/deploy/github/${req.params.repo}/${req.params.environment}/${ci_check[0].head_sha}/${buildNumber}`;
-        } else {
-          error = `${ref} is not ready`;
+  if (config.github.check.type === "check") {
+    checkStatus(
+      req.params.repo,
+      ref,
+      function(response) {
+        // eslint-disable-next-line no-negated-condition
+        if (response.status !== 200) error = response.statusText;
+        else {
+          const checks = response.data.check_runs;
+          const ci_check = checks.filter(
+            check => check.name === config.github.check.name
+          );
+          if (
+            ci_check.length > 0 &&
+            ci_check[0].status === "completed" &&
+            (!config.github.check.required ||
+              ci_check[0].conclusion === "success")
+          ) {
+            const output = ci_check[0].html_url;
+            const buildNumber = output
+              .substring(
+                output.indexOf("actions/runs/"),
+                output.indexOf("/job", output.indexOf("actions/runs/"))
+              )
+              .replace(/\D/g, "");
+            server = `Start deploy to ${req.params.environment} now!`;
+            url = `/deploy/github/${req.params.repo}/${req.params.environment}/${ci_check[0].head_sha}/${buildNumber}`;
+          } else {
+            error = `${ref} is not ready`;
+          }
         }
-      }
 
-      res.render("deploy", {
-        title: "Deploy to Server",
-        error: error,
-        server: server,
-        url: url,
-        envs: []
-      });
-    },
-    function(err) {
-      if (err && err.response) {
-        error = err.response.data;
         res.render("deploy", {
           title: "Deploy to Server",
           error: error,
@@ -175,9 +182,65 @@ router.get("/github/:repo/:environment", function(req, res) {
           url: url,
           envs: []
         });
+      },
+      function(err) {
+        if (err?.response) {
+          error = err.response.data;
+          res.render("deploy", {
+            title: "Deploy to Server",
+            error: error,
+            server: server,
+            url: url,
+            envs: []
+          });
+        }
       }
-    }
-  );
+    );
+  } else if (config.github.check.type === "workflow") {
+    workflowStatus(
+      req.params.repo,
+      ref,
+      function(response) {
+        // eslint-disable-next-line no-negated-condition
+        if (response.status !== 200) error = response.statusText;
+        else {
+          const workflows = response.data.workflow_runs;
+          if (
+            workflows.length > 0 &&
+            workflows[0].status === "completed" &&
+            (!config.github.check.required ||
+              workflows[0].conclusion === "success")
+          ) {
+            const buildNumber = workflows[0].id;
+            server = `Start deploy to ${req.params.environment} now!`;
+            url = `/deploy/github/${req.params.repo}/${req.params.environment}/${workflows[0].head_sha}/${buildNumber}`;
+          } else {
+            error = `${ref} is not ready`;
+          }
+        }
+
+        res.render("deploy", {
+          title: "Deploy to Server",
+          error: error,
+          server: server,
+          url: url,
+          envs: []
+        });
+      },
+      function(err) {
+        if (err?.response) {
+          error = err.response.data;
+          res.render("deploy", {
+            title: "Deploy to Server",
+            error: error,
+            server: server,
+            url: url,
+            envs: []
+          });
+        }
+      }
+    );
+  }
 });
 
 router.get("/github/:repo/:environment/json", function(req, res) {
@@ -195,56 +258,100 @@ router.get("/github/:repo/:environment/json", function(req, res) {
   };
   const ref = environment.ref || "master";
 
-  checkStatus(
-    req.params.repo,
-    ref,
-    function(response) {
-      // eslint-disable-next-line no-negated-condition
-      if (response.status !== 200) error = response.statusText;
-      else {
-        const checks = response.data.check_runs;
-        const ci_check = checks.filter(
-          check => check.name === config.github.check.name
-        );
-        if (
-          ci_check.length > 0 &&
-          ci_check[0].status === "completed" &&
-          (!config.github.check.required ||
-            ci_check[0].conclusion === "success")
-        ) {
-          const output = ci_check[0].html_url;
-          const buildNumber = output
-            .substring(
-              output.indexOf("actions/runs/"),
-              output.indexOf("/job", output.indexOf("actions/runs/"))
-            )
-            .replace(/\D/g, "");
-          server = `Start deploy to ${req.params.environment} now!`;
-          url = `/deploy/github/${req.params.repo}/${req.params.environment}/${ci_check[0].head_sha}/${buildNumber}`;
-        } else {
-          error = `${ref} is not ready`;
+  if (config.github.check.type === "check") {
+    checkStatus(
+      req.params.repo,
+      ref,
+      function(response) {
+        // eslint-disable-next-line no-negated-condition
+        if (response.status !== 200) error = response.statusText;
+        else {
+          const checks = response.data.check_runs;
+          const ci_check = checks.filter(
+            check => check.name === config.github.check.name
+          );
+          if (
+            ci_check.length > 0 &&
+            ci_check[0].status === "completed" &&
+            (!config.github.check.required ||
+              ci_check[0].conclusion === "success")
+          ) {
+            const output = ci_check[0].html_url;
+            const buildNumber = output
+              .substring(
+                output.indexOf("actions/runs/"),
+                output.indexOf("/job", output.indexOf("actions/runs/"))
+              )
+              .replace(/\D/g, "");
+            server = `Start deploy to ${req.params.environment} now!`;
+            url = `/deploy/github/${req.params.repo}/${req.params.environment}/${ci_check[0].head_sha}/${buildNumber}`;
+          } else {
+            error = `${ref} is not ready`;
+          }
         }
-      }
 
-      res.json({
-        title: "Deploy to Server",
-        error: error,
-        server: server,
-        url: url
-      });
-    },
-    function(err) {
-      if (err && err.response) {
-        error = err.response.data;
         res.json({
           title: "Deploy to Server",
           error: error,
           server: server,
           url: url
         });
+      },
+      function(err) {
+        if (err?.response) {
+          error = err.response.data;
+          res.json({
+            title: "Deploy to Server",
+            error: error,
+            server: server,
+            url: url
+          });
+        }
       }
-    }
-  );
+    );
+  } else if (config.github.check.type === "workflow") {
+    workflowStatus(
+      req.params.repo,
+      ref,
+      function(response) {
+        // eslint-disable-next-line no-negated-condition
+        if (response.status !== 200) error = response.statusText;
+        else {
+          const workflows = response.data.workflow_runs;
+          if (
+            workflows.length > 0 &&
+            workflows[0].status === "completed" &&
+            (!config.github.check.required ||
+              workflows[0].conclusion === "success")
+          ) {
+            const buildNumber = workflows[0].id;
+            server = `Start deploy to ${req.params.environment} now!`;
+            url = `/deploy/github/${req.params.repo}/${req.params.environment}/${workflows[0].head_sha}/${buildNumber}`;
+          } else {
+            error = `${ref} is not ready`;
+          }
+        }
+
+        res.json({
+          title: "Deploy to Server",
+          error: error,
+          server: server,
+          url: url
+        });
+      },
+      function(err) {
+        if (err?.response) {
+          error = err.response.data;
+          res.json({
+            title: "Deploy to Server",
+            error: error,
+            server: server,
+            url: url
+          });
+        }
+      }
+    );
+  }
 });
 
 router.get("/github/:repo/:environment/:sha/:build", function(req, res) {
@@ -278,7 +385,7 @@ router.get("/github/:repo/:environment/:sha/:build", function(req, res) {
       }
     },
     function(err) {
-      if (err && err.response) {
+      if (err?.response) {
         error = err.response.data;
         res.json({
           title: "Deploy to Server",
@@ -317,7 +424,7 @@ router.get("/github/:repo/:environment/:sha/:build/json", function(req, res) {
       });
     },
     function(err) {
-      if (err && err.response) {
+      if (err?.response) {
         error = err.response.data;
         res.json({
           title: "Deploy to Server",
