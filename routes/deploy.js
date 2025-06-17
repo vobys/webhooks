@@ -135,12 +135,13 @@ router.get("/github/:repo/:environment", function(req, res) {
       else {
         const checks = response.data.check_runs;
         const ci_check = checks.filter(
-          check => check.name === config.github.check
+          check => check.name === config.github.check.name
         );
         if (
           ci_check.length > 0 &&
           ci_check[0].status === "completed" &&
-          ci_check[0].conclusion === "success"
+          (!config.github.check.required ||
+            ci_check[0].conclusion === "success")
         ) {
           const output = ci_check[0].output.summary;
           const buildNumber = output
@@ -203,12 +204,13 @@ router.get("/github/:repo/:environment/json", function(req, res) {
       else {
         const checks = response.data.check_runs;
         const ci_check = checks.filter(
-          check => check.name === config.github.check
+          check => check.name === config.github.check.name
         );
         if (
           ci_check.length > 0 &&
           ci_check[0].status === "completed" &&
-          ci_check[0].conclusion === "success"
+          (!config.github.check.required ||
+            ci_check[0].conclusion === "success")
         ) {
           const output = ci_check[0].output.summary;
           const buildNumber = output
